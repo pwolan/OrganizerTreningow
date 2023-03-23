@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<title>Dołącz do treningów</title>
+	</head>
+	<body>
+		<form action="/create">
+			<label for="name">Nazwa wydarzenia</label><br />
+			<input type="text" name="name" /> <br /><br />
+			<input type="submit" value="Utwórz" />
+		</form>
+		<ul>
+			{% for event in events %}
+			<li>{{ event.summary }} at {{ event.start.pretty }}</li>
+			{% endfor %}
+		</ul>
+	</body>
+</html>

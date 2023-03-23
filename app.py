@@ -5,10 +5,14 @@ os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 os.environ['OAUTHLIB_RELAX_TOKEN_SCOPE'] = '1'
 import flask
 import requests
+import datetime
 
 import google.oauth2.credentials
 import google_auth_oauthlib.flow
 import googleapiclient.discovery
+import pytz
+
+tz = pytz.timezone('CET')
 
 # This variable specifies the name of a file that contains the OAuth 2.0
 # information for this application, including its client_id and client_secret.
@@ -53,7 +57,49 @@ def test_api_request():
   #              credentials in a persistent database instead.
   flask.session['credentials'] = credentials_to_dict(credentials)
 
-  return flask.jsonify(calendar)
+  start_datetime = datetime.datetime(2023, 3, 25, 8)
+  stop_datetime = datetime.datetime(2023, 3, 25, 8, 30)
+  event = {
+    'summary': 'Super trening',
+    'description': 'A chance to hear more about Google\'s developer products.',
+    'start': {
+      'dateTime': start_datetime.isoformat(),
+      'timeZone': 'CET',
+    },
+    'end': {
+      'dateTime': stop_datetime.isoformat(),
+      'timeZone': 'CET',
+    },
+    'attendees': [
+      {'email': 'mateuszzajac11@gmail.com'},
+    ],
+  }
+
+
+  service.events().insert(calendarId='primary', body=event).execute()
+
+  # query = {
+  #   'timeMin': ,
+  #   'timeMax': ,
+  #   'timeZone': 'CET',
+  #   'items': [{'id': calendar['id']}],
+  # }
+  # maybe_events = service.freebusy().query(body=query).execute()[u'calendars']
+
+  timeMin = tz.localize(datetime.datetime.now()).isoformat()
+  # timeMax = tz.localize(datetime.datetime.now() + datetime.timedelta(days=90)).isoformat()
+
+  maybe_events = service.events().list(calendarId='primary', timeMin=timeMin,
+                                      maxResults=10, singleEvents=True,
+                                      orderBy='startTime').execute()['items']
+
+
+  for e in maybe_events:
+    e['start']['pretty'] = datetime.datetime.fromisoformat(e['start']['dateTime']).strftime("%Y.%m.%d at %H:%M")
+
+  # return flask.jsonify(maybe_events)
+
+  return flask.render_template("list.html", events=maybe_events)
 
 
 @app.route('/authorize')

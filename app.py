@@ -57,26 +57,8 @@ def test_api_request():
   #              credentials in a persistent database instead.
   flask.session['credentials'] = credentials_to_dict(credentials)
 
-  start_datetime = datetime.datetime(2023, 3, 25, 8)
-  stop_datetime = datetime.datetime(2023, 3, 25, 8, 30)
-  event = {
-    'summary': 'Super trening',
-    'description': 'A chance to hear more about Google\'s developer products.',
-    'start': {
-      'dateTime': start_datetime.isoformat(),
-      'timeZone': 'CET',
-    },
-    'end': {
-      'dateTime': stop_datetime.isoformat(),
-      'timeZone': 'CET',
-    },
-    'attendees': [
-      {'email': 'mateuszzajac11@gmail.com'},
-    ],
-  }
 
 
-  service.events().insert(calendarId='primary', body=event).execute()
 
   # query = {
   #   'timeMin': ,
@@ -100,6 +82,55 @@ def test_api_request():
   # return flask.jsonify(maybe_events)
 
   return flask.render_template("list.html", events=maybe_events)
+
+
+@app.route('/add', methods = ['POST'])
+def add():
+  if 'credentials' not in flask.session:
+    return flask.redirect('authorize')
+
+  # Load credentials from the session.
+  credentials = google.oauth2.credentials.Credentials(
+      **flask.session['credentials'])
+
+
+  service = googleapiclient.discovery.build(
+      API_SERVICE_NAME, API_VERSION, credentials=credentials)
+  #
+  calendar =  service.calendars().get(calendarId='primary').execute()
+  print(calendar['summary'])
+  # print(dir(events))
+  # Save credentials back to session in case access token was refreshed.
+  # ACTION ITEM: In a production app, you likely want to save these
+  #              credentials in a persistent database instead.
+  flask.session['credentials'] = credentials_to_dict(credentials)
+
+  start_datetime = datetime.datetime(2023, 3, 28, 8)
+  stop_datetime = datetime.datetime(2023, 3, 28, 8, 30)
+
+
+
+  name = flask.request.form["name"]
+  time = flask.request.form["time"] + ':00'
+  print(time, stop_datetime.isoformat())
+  event = {
+    'summary': name,
+    'description': 'A chance to hear more about Google\'s developer products.',
+    'start': {
+      'dateTime': time,
+      'timeZone': 'CET',
+    },
+    'end': {
+      'dateTime': (datetime.datetime.fromisoformat(time)+datetime.timedelta(minutes=int(flask.request.form["duration"]))).isoformat(),
+      'timeZone': 'CET',
+    },
+    'attendees': [
+      {'email': 'mateuszzajac11@gmail.com'},
+    ],
+  }
+  service.events().insert(calendarId='primary', body=event).execute()
+
+  return flask.redirect('/test')
 
 
 @app.route('/authorize')

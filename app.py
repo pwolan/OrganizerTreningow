@@ -108,6 +108,12 @@ def add():
   start_datetime = datetime.datetime(2023, 3, 28, 8)
   stop_datetime = datetime.datetime(2023, 3, 28, 8, 30)
 
+  attendees = []
+
+  with open("attendees.txt") as fp:
+    lines = fp.readlines()
+    for line in lines:
+      attendees.append({'email': line.strip()})
 
 
   name = flask.request.form["name"]
@@ -115,7 +121,7 @@ def add():
   print(time, stop_datetime.isoformat())
   event = {
     'summary': name,
-    'description': 'A chance to hear more about Google\'s developer products.',
+    'description': '',
     'start': {
       'dateTime': time,
       'timeZone': 'CET',
@@ -124,9 +130,7 @@ def add():
       'dateTime': (datetime.datetime.fromisoformat(time)+datetime.timedelta(minutes=int(flask.request.form["duration"]))).isoformat(),
       'timeZone': 'CET',
     },
-    'attendees': [
-      {'email': 'mateuszzajac11@gmail.com'},
-    ],
+    'attendees': attendees,
   }
   service.events().insert(calendarId='primary', body=event).execute()
 

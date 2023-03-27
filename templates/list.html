@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<title>Dołącz do treningów</title>
+	</head>
+	<body>
+		<form action="/add" method="post">
+			<label for="name">Nazwa wydarzenia</label><br />
+			<input type="text" name="name" required /> <br /><br />
+
+			<label for="time">Rozpoczęcie treningu</label><br />
+			<input type="datetime-local" id="time" name="time" required />
+			<br /><br />
+
+			<label for="duration">Czas trwania (w minutach)</label><br />
+			<input type="number" id="duration" name="duration" required />
+			<br /><br />
+
+			<input type="submit" value="Utwórz" />
+		</form>
+		<ul>
+			{% for event in events %}
+			<li>{{ event.summary }} at {{ event.start.pretty }}</li>
+			{% endfor %}
+		</ul>
+	</body>
+</html>

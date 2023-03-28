@@ -21,7 +21,10 @@
 		</form>
 		<ul>
 			{% for event in events %}
-			<li>{{ event.summary }} at {{ event.start.pretty }}</li>
+			<li>
+				{{ event.summary }} at {{ event.start.pretty }} ({{
+				event.stats.yes }} / {{ event.stats.all }})
+			</li>
 			{% endfor %}
 		</ul>
 	</body>

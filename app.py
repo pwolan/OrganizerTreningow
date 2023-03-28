@@ -68,8 +68,6 @@ def test_api_request():
     flask.session['credentials'] = credentials_to_dict(credentials)
 
 
-
-
     # query = {
     #   'timeMin': ,
     #   'timeMax': ,
@@ -89,8 +87,40 @@ def test_api_request():
         if 'dateTime' in e['start']:
             e['start']['pretty'] = datetime.datetime.fromisoformat(e['start']['dateTime']).strftime("%Y.%m.%d at %H:%M")
 
+        all_count, yes_count, maybe_count, no_response, no_count = 0, 0, 0, 0, 0
+            
+
+        # The attendee's response status. Possible values are:
+
+        #     "needsAction" - The attendee has not responded to the invitation (recommended for new events).
+        #     "declined" - The attendee has declined the invitation.
+        #     "tentative" - The attendee has tentatively accepted the invitation.
+        #     "accepted" - The attendee has accepted the invitation.
 
 
+        if 'attendees' in e:
+            for a in e['attendees']:
+                all_count += 1
+                match a['responseStatus']:
+                    case 'needsAction':
+                        no_response += 1
+                    case 'declined':
+                        no_count += 1
+                    case 'tentative':
+                        maybe_count += 1
+                    case 'accepted':
+                        yes_count += 1
+
+        e['stats'] = {
+            'all': all_count,
+            'yes': yes_count,
+            'maybe': maybe_count,
+            'no_response': no_response,
+            'no': no_count,
+        }
+   
+
+    # return json.dumps(maybe_events)
     return flask.render_template("list.html", events=maybe_events)
 
 
@@ -126,6 +156,8 @@ def add():
             attendees.append({'email': line.strip()})
 
 
+
+
     name = flask.request.form["name"]
     time = flask.request.form["time"] + ':00'
     print(time, stop_datetime.isoformat())
@@ -142,6 +174,10 @@ def add():
         },
         'attendees': attendees,
     }
+
+    print(event)
+
+
     service.events().insert(calendarId='primary', body=event).execute()
     # try:
     with sqlite3.connect("identifier.sqlite") as con:

@@ -11,31 +11,40 @@ import googleapiclient.discovery
 import pytz
 import sqlite3
 
+from credentials_required import credentials_required
+from user.user import userRoutes
+from club.club import clubRoutes
+
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 os.environ['OAUTHLIB_RELAX_TOKEN_SCOPE'] = '1'
 
 tz = pytz.timezone('CET')
-
-# This variable specifies the name of a file that contains the OAuth 2.0
-# information for this application, including its client_id and client_secret.
 CLIENT_SECRETS_FILE = "credentials.json"
-
-# This OAuth 2.0 access scope allows for full read/write access to the
-# authenticated user's account and requires requests to use an SSL connection.
 SCOPES = ['https://www.googleapis.com/auth/calendar']
 API_SERVICE_NAME = 'calendar'
 API_VERSION = 'v3'
 
 app = flask.Flask(__name__)
-# Note: A secret key is included in the sample so that it works.
-# If you use this code in your application, replace this with a truly secret
-# key. See https://flask.palletsprojects.com/quickstart/#sessions.
 app.secret_key = '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'
 
 
+app.register_blueprint(userRoutes, url_prefix='/user')
+app.register_blueprint(clubRoutes, url_prefix='/club')
+
 @app.route('/')
 def index():
-    return print_index_table()
+    return flask.render_template("index.html")
+
+
+"""
+
+
+
+"""
+
+
+
+##################
 
 
 @app.route('/databasetest')
@@ -46,20 +55,15 @@ def databasetest():
         rows = cur.fetchall()
         return json.dumps(rows)
 
+
 @app.route('/test')
-def test_api_request():
-    if 'credentials' not in flask.session:
-        return flask.redirect('authorize')
-
-    # Load credentials from the session.
-    credentials = google.oauth2.credentials.Credentials(
-        **flask.session['credentials'])
-
+@credentials_required
+def test_api_request(credentials):
 
     service = googleapiclient.discovery.build(
         API_SERVICE_NAME, API_VERSION, credentials=credentials)
     #
-    calendar =  service.calendars().get(calendarId='primary').execute()
+    calendar = service.calendars().get(calendarId='primary').execute()
     print(calendar['summary'])
     # print(dir(events))
     # Save credentials back to session in case access token was refreshed.
@@ -77,8 +81,6 @@ def test_api_request():
     # maybe_events = service.freebusy().query(body=query).execute()[u'calendars']
 
     timeMin = tz.localize(datetime.datetime.now()).isoformat()
-    # timeMax = tz.localize(datetime.datetime.now() + datetime.timedelta(days=90)).isoformat()
-
     maybe_events = service.events().list(calendarId='primary', timeMin=timeMin,
                                          maxResults=10, singleEvents=True,
                                          orderBy='startTime').execute()['items']
@@ -87,57 +89,17 @@ def test_api_request():
         if 'dateTime' in e['start']:
             e['start']['pretty'] = datetime.datetime.fromisoformat(e['start']['dateTime']).strftime("%Y.%m.%d at %H:%M")
 
-        all_count, yes_count, maybe_count, no_response, no_count = 0, 0, 0, 0, 0
-            
-
-        # The attendee's response status. Possible values are:
-
-        #     "needsAction" - The attendee has not responded to the invitation (recommended for new events).
-        #     "declined" - The attendee has declined the invitation.
-        #     "tentative" - The attendee has tentatively accepted the invitation.
-        #     "accepted" - The attendee has accepted the invitation.
-
-
-        if 'attendees' in e:
-            for a in e['attendees']:
-                all_count += 1
-                match a['responseStatus']:
-                    case 'needsAction':
-                        no_response += 1
-                    case 'declined':
-                        no_count += 1
-                    case 'tentative':
-                        maybe_count += 1
-                    case 'accepted':
-                        yes_count += 1
-
-        e['stats'] = {
-            'all': all_count,
-            'yes': yes_count,
-            'maybe': maybe_count,
-            'no_response': no_response,
-            'no': no_count,
-        }
-   
-
-    # return json.dumps(maybe_events)
     return flask.render_template("list.html", events=maybe_events)
 
 
-@app.route('/add', methods = ['POST'])
-def add():
-    if 'credentials' not in flask.session:
-        return flask.redirect('authorize')
-
-    # Load credentials from the session.
-    credentials = google.oauth2.credentials.Credentials(
-        **flask.session['credentials'])
-
+@app.route('/add', methods=['POST'])
+@credentials_required
+def add(credentials):
 
     service = googleapiclient.discovery.build(
         API_SERVICE_NAME, API_VERSION, credentials=credentials)
     #
-    calendar =  service.calendars().get(calendarId='primary').execute()
+    calendar = service.calendars().get(calendarId='primary').execute()
     print(calendar['summary'])
     # print(dir(events))
     # Save credentials back to session in case access token was refreshed.
@@ -169,28 +131,26 @@ def add():
             'timeZone': 'CET',
         },
         'end': {
-            'dateTime': (datetime.datetime.fromisoformat(time)+datetime.timedelta(minutes=int(flask.request.form["duration"]))).isoformat(),
+            'dateTime': (datetime.datetime.fromisoformat(time) + datetime.timedelta(
+                minutes=int(flask.request.form["duration"]))).isoformat(),
             'timeZone': 'CET',
         },
         'attendees': attendees,
     }
-
-    print(event)
-
-
     service.events().insert(calendarId='primary', body=event).execute()
-    # try:
-    with sqlite3.connect("identifier.sqlite") as con:
-        cur = con.cursor()
-        sql = f"INSERT INTO events (summary, description, startDateTime, startTimeZone, endDateTime, endTimeZone)" \
-              f"VALUES (?,?,?,?,?,?)"
-        cur.execute(sql, (name, 'desc', time, 'CET', event['end']['dateTime'], 'CET'))
-        con.commit()
-    # except Exception as e:
-    #     print(e)
-    #     con.rollback()
-    # finally:
-    return flask.redirect('/test')
+    try:
+        with sqlite3.connect("identifier.sqlite") as con:
+            cur = con.cursor()
+            sql = f"INSERT INTO events (summary, description, startDateTime, startTimeZone, endDateTime, endTimeZone)" \
+                  f"VALUES (?,?,?,?,?,?)"
+            cur.execute(sql, (name, 'desc', time, 'CET', event['end']['dateTime'], 'CET'))
+            con.commit()
+    except Exception as e:
+        print(e)
+        con.rollback()
+    finally:
+        return flask.redirect('/test')
+
 
 @app.route('/authorize')
 def authorize():
@@ -232,9 +192,7 @@ def oauth2callback():
     # Use the authorization server's response to fetch the OAuth 2.0 tokens.
     authorization_response = flask.request.url
 
-
     flow.fetch_token(authorization_response=authorization_response)
-
 
     # Store credentials in the session.
     # ACTION ITEM: In a production app, you likely want to save these
@@ -243,6 +201,7 @@ def oauth2callback():
     flask.session['credentials'] = credentials_to_dict(credentials)
 
     return flask.redirect(flask.url_for('test_api_request'))
+
 
 @app.route('/revoke')
 def revoke():
@@ -255,13 +214,13 @@ def revoke():
 
     revoke = requests.post('https://oauth2.googleapis.com/revoke',
                            params={'token': credentials.token},
-                           headers = {'content-type': 'application/x-www-form-urlencoded'})
+                           headers={'content-type': 'application/x-www-form-urlencoded'})
 
     status_code = getattr(revoke, 'status_code')
     if status_code == 200:
-        return('Credentials successfully revoked.' + print_index_table())
+        return ('Credentials successfully revoked.' + print_index_table())
     else:
-        return('An error occurred.' + print_index_table())
+        return ('An error occurred.' + print_index_table())
 
 
 @app.route('/clear')
@@ -279,6 +238,7 @@ def credentials_to_dict(credentials):
             'client_id': credentials.client_id,
             'client_secret': credentials.client_secret,
             'scopes': credentials.scopes}
+
 
 def print_index_table():
     return ('<table>' +

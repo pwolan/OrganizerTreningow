@@ -1,4 +1,6 @@
 from flask import Blueprint, render_template
+import flask
+import json
 
 userRoutes = Blueprint('user', __name__)
 
@@ -11,3 +13,17 @@ def events():
 @userRoutes.get('/clubs')
 def clubs():
     return "CLUBS"
+
+@userRoutes.get('/edit')
+def edit():
+    eventId = flask.request.args.get("eventId")
+    return render_template("edit.html", eventId=eventId)
+
+@userRoutes.post('/edited')
+def edited():
+    eventId = flask.request.form["eventId"]
+    print(eventId)
+
+
+    return json.dumps(eventId)
+    return render_template("edit.html")

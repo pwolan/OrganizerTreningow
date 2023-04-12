@@ -24,6 +24,7 @@
 			<li>
 				{{ event.summary }} at {{ event.start.pretty }} ({{
 				event.stats.yes }} / {{ event.stats.all }})
+				<a href="/user/edit?eventId={{event.id}}">edit</a>
 			</li>
 			{% endfor %}
 		</ul>

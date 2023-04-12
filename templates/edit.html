@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<title>Dołącz do treningów</title>
+	</head>
+	<body>
+		<form action="/user/edited" method="post">
+			<label for="name">Nazwa wydarzenia</label><br />
+			<input type="text" name="name" /> <br /><br />
+
+			<label for="time">Rozpoczęcie treningu</label><br />
+			<input type="datetime-local" id="time" name="time" />
+			<br /><br />
+
+			<label for="duration">Czas trwania (w minutach)</label><br />
+			<input type="number" id="duration" name="duration" />
+			<br /><br />
+
+			<input
+				type="hidden"
+				id="eventId"
+				name="eventId"
+				value="{{eventId}}"
+			/>
+
+			<input type="submit" value="Utwórz" />
+		</form>
+	</body>
+</html>

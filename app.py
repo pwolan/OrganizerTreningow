@@ -176,9 +176,11 @@ def add(credentials):
     try:
         with sqlite3.connect("identifier.sqlite") as con:
             cur = con.cursor()
-            sql = f"INSERT INTO events (summary, description, startDateTime, startTimeZone, endDateTime, endTimeZone, event)" \
-                  f"VALUES (?,?,?,?,?,?,?)"
-            cur.execute(sql, (name, 'desc', time, 'CET', event['end']['dateTime'], 'CET', event['id']))
+            last_id = cur.execute(f'select max(event_db_id) from events').fetchall()[0][0]
+
+            sql = f"INSERT INTO events (event_db_id, summary, description, startDateTime, startTimeZone, endDateTime, endTimeZone, event)" \
+                  f"VALUES (?,?,?,?,?,?,?,?)"
+            cur.execute(sql, (last_id + 1, name, 'desc', time, 'CET', event['end']['dateTime'], 'CET', event['id']))
             con.commit()
     except Exception as e:
         print(e)

@@ -83,4 +83,24 @@ def edited(credentials):
     finally:
         return flask.redirect('/test')
 
-    return render_template("edit.html")
+
+@userRoutes.get('/delete')
+@credentials_required
+def delete(credentials):
+    service = googleapiclient.discovery.build(
+        API_SERVICE_NAME, API_VERSION, credentials=credentials)
+
+    eventId = flask.request.args["eventId"]
+    service.events().delete(calendarId='primary', eventId=eventId).execute()
+
+    try:
+        with sqlite3.connect("identifier.sqlite") as con:
+            cur = con.cursor()
+            sql = f" DELETE FROM events WHERE event=\"" + eventId + '";' 
+            cur.execute(sql)
+            con.commit()
+    except Exception as e:
+        print(e)
+        con.rollback()
+    finally:
+        return flask.redirect('/test')

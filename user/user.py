@@ -7,6 +7,7 @@ import google_auth_oauthlib.flow
 import googleapiclient.discovery
 import pytz
 import datetime
+import sqlite3
 
 from credentials_required import credentials_required
 
@@ -69,5 +70,17 @@ def edited(credentials):
 
 
     updated_event = service.events().update(calendarId='primary', eventId=event['id'], body=event).execute()
+
+    try:
+        with sqlite3.connect("identifier.sqlite") as con:
+            cur = con.cursor()
+            sql = f" UPDATE events SET summary = ?, startDateTime = ?, endDateTime = ? WHERE event=\"" + event['id'] + '";' 
+            cur.execute(sql, (updated_event['summary'], updated_event['start']['dateTime'], updated_event['end']['dateTime']))
+            con.commit()
+    except Exception as e:
+        print(e)
+        con.rollback()
+    finally:
+        return flask.redirect('/test')
 
     return render_template("edit.html")

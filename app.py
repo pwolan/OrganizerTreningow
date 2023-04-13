@@ -171,13 +171,14 @@ def add(credentials):
         },
         'attendees': attendees,
     }
-    service.events().insert(calendarId='primary', body=event).execute()
+    event = service.events().insert(calendarId='primary', body=event).execute()
+
     try:
         with sqlite3.connect("identifier.sqlite") as con:
             cur = con.cursor()
-            sql = f"INSERT INTO events (summary, description, startDateTime, startTimeZone, endDateTime, endTimeZone)" \
-                  f"VALUES (?,?,?,?,?,?)"
-            cur.execute(sql, (name, 'desc', time, 'CET', event['end']['dateTime'], 'CET'))
+            sql = f"INSERT INTO events (summary, description, startDateTime, startTimeZone, endDateTime, endTimeZone, event)" \
+                  f"VALUES (?,?,?,?,?,?,?)"
+            cur.execute(sql, (name, 'desc', time, 'CET', event['end']['dateTime'], 'CET', event['id']))
             con.commit()
     except Exception as e:
         print(e)

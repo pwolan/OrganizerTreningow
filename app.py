@@ -12,11 +12,14 @@ import pytz
 import sqlite3
 
 from credentials_required import credentials_required
-from user.user import userRoutes
-from club.club import clubRoutes
+from controllers.user.user import userRoutes
+from controllers.club.club import clubRoutes
+from controllers.event.event import eventRoutes
 
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 os.environ['OAUTHLIB_RELAX_TOKEN_SCOPE'] = '1'
+
+os.environ['DB_PATH'] = "identifier.sqlite"
 
 tz = pytz.timezone('CET')
 CLIENT_SECRETS_FILE = "credentials.json"
@@ -30,21 +33,37 @@ app.secret_key = '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'
 
 app.register_blueprint(userRoutes, url_prefix='/user')
 app.register_blueprint(clubRoutes, url_prefix='/club')
+app.register_blueprint(eventRoutes, url_prefix='/event')
 
 @app.route('/')
 def index():
     return flask.render_template("index.html")
 
 
-"""
-
-
-
-"""
 
 
 
 ##################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 @app.route('/databasetest')
@@ -70,15 +89,6 @@ def test_api_request(credentials):
     # ACTION ITEM: In a production app, you likely want to save these
     #              credentials in a persistent database instead.
     flask.session['credentials'] = credentials_to_dict(credentials)
-
-
-    # query = {
-    #   'timeMin': ,
-    #   'timeMax': ,
-    #   'timeZone': 'CET',
-    #   'items': [{'id': calendar['id']}],
-    # }
-    # maybe_events = service.freebusy().query(body=query).execute()[u'calendars']
 
     timeMin = tz.localize(datetime.datetime.now()).isoformat()
     maybe_events = service.events().list(calendarId='primary', timeMin=timeMin,

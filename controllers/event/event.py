@@ -1,24 +1,24 @@
 from flask import Blueprint, render_template
 
-clubRoutes = Blueprint('event', __name__)
+eventRoutes = Blueprint('event', __name__)
 
-@clubRoutes.get("/confirm")
+@eventRoutes.get("/confirm")
 def confirm():
     return "CONFIRM"
 
-@clubRoutes.get("/reject")
+@eventRoutes.get("/reject")
 def reject():
     return "REJECT"
 
-@clubRoutes.get("/add")
+@eventRoutes.get("/add")
 def add():
     return "ADD"
 
-@clubRoutes.get("/remove")
+@eventRoutes.get("/remove")
 def remove():
     return "REMOVE"
 
-@clubRoutes.get("/edit")
+@eventRoutes.get("/edit")
 def edit():
     return "EDIT"
 

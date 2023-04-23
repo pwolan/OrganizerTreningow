@@ -99,6 +99,40 @@ def test_api_request(credentials):
         if 'dateTime' in e['start']:
             e['start']['pretty'] = datetime.datetime.fromisoformat(e['start']['dateTime']).strftime("%Y.%m.%d at %H:%M")
 
+        all_count, yes_count, maybe_count, no_response, no_count = 0, 0, 0, 0, 0
+
+
+        # The attendee's response status. Possible values are:
+
+        #     "needsAction" - The attendee has not responded to the invitation (recommended for new events).
+        #     "declined" - The attendee has declined the invitation.
+        #     "tentative" - The attendee has tentatively accepted the invitation.
+        #     "accepted" - The attendee has accepted the invitation.
+
+
+        if 'attendees' in e:
+            for a in e['attendees']:
+                all_count += 1
+                match a['responseStatus']:
+                    case 'needsAction':
+                        no_response += 1
+                    case 'declined':
+                        no_count += 1
+                    case 'tentative':
+                        maybe_count += 1
+                    case 'accepted':
+                        yes_count += 1
+
+            e['stats'] = {
+                'all': all_count,
+                'yes': yes_count,
+                'maybe': maybe_count,
+                'no_response': no_response,
+                'no': no_count,
+            }
+
+
+    # return json.dumps(maybe_events)
     return flask.render_template("list.html", events=maybe_events)
 
 
@@ -147,13 +181,16 @@ def add(credentials):
         },
         'attendees': attendees,
     }
-    service.events().insert(calendarId='primary', body=event).execute()
+    event = service.events().insert(calendarId='primary', body=event).execute()
+
     try:
         with sqlite3.connect("identifier.sqlite") as con:
             cur = con.cursor()
-            sql = f"INSERT INTO events (summary, description, startDateTime, startTimeZone, endDateTime, endTimeZone)" \
-                  f"VALUES (?,?,?,?,?,?)"
-            cur.execute(sql, (name, 'desc', time, 'CET', event['end']['dateTime'], 'CET'))
+            last_id = cur.execute(f'select max(event_db_id) from events').fetchall()[0][0]
+
+            sql = f"INSERT INTO events (event_db_id, summary, description, startDateTime, startTimeZone, endDateTime, endTimeZone, event)" \
+                  f"VALUES (?,?,?,?,?,?,?,?)"
+            cur.execute(sql, (last_id + 1, name, 'desc', time, 'CET', event['end']['dateTime'], 'CET', event['id']))
             con.commit()
     except Exception as e:
         print(e)

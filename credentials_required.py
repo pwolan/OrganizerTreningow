@@ -10,7 +10,7 @@ def credentials_required(f):
     @wraps(f)
     def decorator(*args, **kwargs):
         if 'credentials' not in flask.session:
-            return flask.redirect('authorize')
+            return flask.redirect('/authorize')
 
             # Load credentials from the session.
         credentials = google.oauth2.credentials.Credentials(**flask.session['credentials'])

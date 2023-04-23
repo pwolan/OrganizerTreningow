@@ -38,12 +38,11 @@ def add(credentials):
     club_id = flask.request.form["club"]
     club = Club(club_id)
 
-    attendees = club.getMembers()
-
-    with open("attendees.txt") as fp:
-        lines = fp.readlines()
-        for line in lines:
-            attendees.append({'email': line.strip()})
+    emails = club.getMembers()
+    attendees = []
+    print(emails)
+    for email in emails:
+        attendees.append({'email': email.strip()})
 
 
     print(time, stop_datetime.isoformat())

@@ -68,7 +68,8 @@ class Club:
                 sql = "SELECT * FROM usersInClubs INNER JOIN users u on u.user_id = usersInClubs.user_id WHERE club_id=? and endTime is null"
                 cur.execute(sql, self.id)
                 members = cur.fetchall()
-                return members
+                print(members)
+                return map(lambda x: x[5], members)
         except Exception as e:
             print(e)
             con.rollback()

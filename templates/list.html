@@ -5,7 +5,7 @@
 		<title>Dołącz do treningów</title>
 	</head>
 	<body>
-		<form action="/add" method="post">
+		<form action="/event/add" method="post">
 			<label for="name">Nazwa wydarzenia</label><br />
 			<input type="text" name="name" required /> <br /><br />
 
@@ -24,8 +24,8 @@
 			<li>
 				{{ event.summary }} at {{ event.start.pretty }} ({{
 				event.stats.yes }} / {{ event.stats.all }})
-				<a href="/user/edit?eventId={{event.id}}">Zmień</a>
-				<a href="/user/delete?eventId={{event.id}}">Usuń</a>
+				<a href="/event/edit?eventId={{event.id}}">Zmień</a>
+				<a href="/event/remove?eventId={{event.id}}">Usuń</a>
 			</li>
 			{% endfor %}
 		</ul>

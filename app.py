@@ -10,6 +10,7 @@ import google_auth_oauthlib.flow
 import googleapiclient.discovery
 import pytz
 import sqlite3
+from helpers import  credentials_to_dict
 
 from credentials_required import credentials_required
 from controllers.user.user import userRoutes
@@ -48,24 +49,6 @@ def index():
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 @app.route('/databasetest')
 def databasetest():
     with sqlite3.connect("identifier.sqlite") as con:
@@ -74,129 +57,6 @@ def databasetest():
         rows = cur.fetchall()
         return json.dumps(rows)
 
-
-@app.route('/test')
-@credentials_required
-def test_api_request(credentials):
-
-    service = googleapiclient.discovery.build(
-        API_SERVICE_NAME, API_VERSION, credentials=credentials)
-    #
-    calendar = service.calendars().get(calendarId='primary').execute()
-    print(calendar['summary'])
-    # print(dir(events))
-    # Save credentials back to session in case access token was refreshed.
-    # ACTION ITEM: In a production app, you likely want to save these
-    #              credentials in a persistent database instead.
-    flask.session['credentials'] = credentials_to_dict(credentials)
-
-    timeMin = tz.localize(datetime.datetime.now()).isoformat()
-    maybe_events = service.events().list(calendarId='primary', timeMin=timeMin,
-                                         maxResults=10, singleEvents=True,
-                                         orderBy='startTime').execute()['items']
-
-    for e in maybe_events:
-        if 'dateTime' in e['start']:
-            e['start']['pretty'] = datetime.datetime.fromisoformat(e['start']['dateTime']).strftime("%Y.%m.%d at %H:%M")
-
-        all_count, yes_count, maybe_count, no_response, no_count = 0, 0, 0, 0, 0
-
-
-        # The attendee's response status. Possible values are:
-
-        #     "needsAction" - The attendee has not responded to the invitation (recommended for new events).
-        #     "declined" - The attendee has declined the invitation.
-        #     "tentative" - The attendee has tentatively accepted the invitation.
-        #     "accepted" - The attendee has accepted the invitation.
-
-
-        if 'attendees' in e:
-            for a in e['attendees']:
-                all_count += 1
-                match a['responseStatus']:
-                    case 'needsAction':
-                        no_response += 1
-                    case 'declined':
-                        no_count += 1
-                    case 'tentative':
-                        maybe_count += 1
-                    case 'accepted':
-                        yes_count += 1
-
-            e['stats'] = {
-                'all': all_count,
-                'yes': yes_count,
-                'maybe': maybe_count,
-                'no_response': no_response,
-                'no': no_count,
-            }
-
-
-    # return json.dumps(maybe_events)
-    return flask.render_template("list.html", events=maybe_events)
-
-
-@app.route('/add', methods=['POST'])
-@credentials_required
-def add(credentials):
-
-    service = googleapiclient.discovery.build(
-        API_SERVICE_NAME, API_VERSION, credentials=credentials)
-    #
-    calendar = service.calendars().get(calendarId='primary').execute()
-    print(calendar['summary'])
-    # print(dir(events))
-    # Save credentials back to session in case access token was refreshed.
-    # ACTION ITEM: In a production app, you likely want to save these
-    #              credentials in a persistent database instead.
-    flask.session['credentials'] = credentials_to_dict(credentials)
-
-    start_datetime = datetime.datetime(2023, 3, 28, 8)
-    stop_datetime = datetime.datetime(2023, 3, 28, 8, 30)
-
-    attendees = []
-
-    with open("attendees.txt") as fp:
-        lines = fp.readlines()
-        for line in lines:
-            attendees.append({'email': line.strip()})
-
-
-
-
-    name = flask.request.form["name"]
-    time = flask.request.form["time"] + ':00'
-    print(time, stop_datetime.isoformat())
-    event = {
-        'summary': name,
-        'description': '',
-        'start': {
-            'dateTime': time,
-            'timeZone': 'CET',
-        },
-        'end': {
-            'dateTime': (datetime.datetime.fromisoformat(time) + datetime.timedelta(
-                minutes=int(flask.request.form["duration"]))).isoformat(),
-            'timeZone': 'CET',
-        },
-        'attendees': attendees,
-    }
-    event = service.events().insert(calendarId='primary', body=event).execute()
-
-    try:
-        with sqlite3.connect("identifier.sqlite") as con:
-            cur = con.cursor()
-            last_id = cur.execute(f'select max(event_db_id) from events').fetchall()[0][0]
-
-            sql = f"INSERT INTO events (event_db_id, summary, description, startDateTime, startTimeZone, endDateTime, endTimeZone, event)" \
-                  f"VALUES (?,?,?,?,?,?,?,?)"
-            cur.execute(sql, (last_id + 1, name, 'desc', time, 'CET', event['end']['dateTime'], 'CET', event['id']))
-            con.commit()
-    except Exception as e:
-        print(e)
-        con.rollback()
-    finally:
-        return flask.redirect('/test')
 
 
 @app.route('/authorize')
@@ -276,15 +136,6 @@ def clear_credentials():
         del flask.session['credentials']
     return ('Credentials have been cleared.<br><br>' +
             print_index_table())
-
-
-def credentials_to_dict(credentials):
-    return {'token': credentials.token,
-            'refresh_token': credentials.refresh_token,
-            'token_uri': credentials.token_uri,
-            'client_id': credentials.client_id,
-            'client_secret': credentials.client_secret,
-            'scopes': credentials.scopes}
 
 
 def print_index_table():

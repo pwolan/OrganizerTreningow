@@ -38,14 +38,14 @@ def add(credentials):
     club_id = flask.request.form["club"]
     club = Club(club_id)
 
-    emails = club.getMembers()
+    emails, at_ids = club.getMembers()
     attendees = []
-    print(emails)
+
     for email in emails:
         attendees.append({'email': email.strip()})
 
 
-    print(time, stop_datetime.isoformat())
+
     event = {
         'summary': name,
         'description': '',
@@ -62,7 +62,7 @@ def add(credentials):
     }
     event = service.events().insert(calendarId='primary', body=event).execute()
     eventModel = Event()
-    eventModel.add(event)
+    eventModel.add(event, at_ids)
     return flask.redirect('/event/list')
 
 @eventRoutes.get("/remove")

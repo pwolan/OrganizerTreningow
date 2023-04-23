@@ -5,7 +5,7 @@ from sqlite3 import connect
 class Event:
 
     # @staticmethod
-    def add(self, e):
+    def add(self, e, at_ids):
         try:
             with connect(os.environ.get("DB_PATH")) as con:
                 cur = con.cursor()
@@ -17,6 +17,13 @@ class Event:
                       f"VALUES (?,?,?,?,?,?,?,?)"
                 cur.execute(sql, (
                 last_id + 1, e['summary'], 'desc', e['start']['dateTime'], 'CET', e['end']['dateTime'], 'CET', e['id']))
+                event_id = cur.lastrowid
+                # adding to attendance
+                for id in at_ids:
+                    print(id)
+                    sql2 = "INSERT INTO attendance (event_id, user_id) VALUES (?,?)"
+                    cur.execute(sql2, (event_id, id))
+
                 con.commit()
         except Exception as e:
             print(e)

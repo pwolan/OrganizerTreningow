@@ -1,3 +1,4 @@
+import flask
 from flask import Blueprint, render_template, request, session
 
 from credentials_required import credentials_required
@@ -47,6 +48,12 @@ def edit():
     return "EDIT"
 
 @clubRoutes.get("/stats")
-def stats():
-    return "STATS"
+@credentials_required
+def stats(_):
+    club_id = request.args.get("clubID")
+    club = Club(club_id)
+
+    data = club.getIncomingTrainingsStats(3)
+    return flask.render_template("stats.html", data=data)
+
 

@@ -61,5 +61,18 @@ class Club:
             con.rollback()
             return "Database Error"
 
+    def getMembers(self):
+        try:
+            with connect(os.environ.get("DB_PATH")) as con:
+                cur = con.cursor()
+                sql = "SELECT * FROM usersInClubs INNER JOIN users u on u.user_id = usersInClubs.user_id WHERE club_id=? and endTime is null"
+                cur.execute(sql, self.id)
+                members = cur.fetchall()
+                return members
+        except Exception as e:
+            print(e)
+            con.rollback()
+            return "Database Error"
+
 
 

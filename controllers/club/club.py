@@ -6,9 +6,10 @@ clubRoutes = Blueprint('club', __name__)
 
 @clubRoutes.get("/join")
 @credentials_required
-def join(credentials, g_data):
+def join(credentials):
     clubID = request.args.get("clubID")
-    userID = session['credentials']['client_id']
+    userID = session['user_info']['id']
+    print(userID)
     club: Club = Club(clubID)
     if not club.exists():
         return "JOIN ERROR: Club do not exists"
@@ -20,9 +21,9 @@ def join(credentials, g_data):
 
 @clubRoutes.get("/leave")
 @credentials_required
-def leave(credentials, g_data):
+def leave(credentials):
     club_id = request.args.get("clubID")
-    user_id = session['credentials']['client_id']
+    user_id = session['user_info']['id']
     club: Club = Club(club_id)
     if not club.exists():
         return "LEAVE ERROR: Club do not exists"

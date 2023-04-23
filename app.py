@@ -10,12 +10,13 @@ import google_auth_oauthlib.flow
 import googleapiclient.discovery
 import pytz
 import sqlite3
-from helpers import  credentials_to_dict
+from helpers import credentials_to_dict, get_user_info
 
 from credentials_required import credentials_required
 from controllers.user.user import userRoutes
 from controllers.club.club import clubRoutes
 from controllers.event.event import eventRoutes
+from models.User import User
 
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 os.environ['OAUTHLIB_RELAX_TOKEN_SCOPE'] = '1'
@@ -24,7 +25,7 @@ os.environ['DB_PATH'] = "identifier.sqlite"
 
 tz = pytz.timezone('CET')
 CLIENT_SECRETS_FILE = "credentials.json"
-SCOPES = ['https://www.googleapis.com/auth/calendar']
+SCOPES = ['https://www.googleapis.com/auth/calendar','https://www.googleapis.com/auth/userinfo.email']
 API_SERVICE_NAME = 'calendar'
 API_VERSION = 'v3'
 
@@ -82,6 +83,7 @@ def authorize():
     # Store the state so the callback can verify the auth server response.
     flask.session['state'] = state
 
+
     return flask.redirect(authorization_url)
 
 
@@ -106,8 +108,12 @@ def oauth2callback():
     #              credentials in a persistent database instead.
     credentials = flow.credentials
     flask.session['credentials'] = credentials_to_dict(credentials)
+    user_info = get_user_info(credentials)
+    flask.session['user_info'] = user_info
+    user = User(credentials, user_info)
+    user.save()
 
-    return flask.redirect(flask.url_for('/'))
+    return flask.redirect('/')
 
 
 @app.route('/revoke')

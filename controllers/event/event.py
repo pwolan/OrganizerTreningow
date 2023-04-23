@@ -5,9 +5,12 @@ import flask
 import googleapiclient.discovery
 import pytz
 from flask import Blueprint, render_template
-from helpers import credentials_to_dict
+from helpers import credentials_to_dict, getGoogleService
 
 from credentials_required import credentials_required
+from models.Club import Club
+from models.Event import Event
+
 tz = pytz.timezone('CET')
 eventRoutes = Blueprint('event', __name__)
 
@@ -21,27 +24,28 @@ def reject():
 
 @eventRoutes.post("/add")
 @credentials_required
-def add(credentials, gData):
-    service = googleapiclient.discovery.build(
-        gData['API_SERVICE_NAME'], gData['API_VERSION'], credentials=credentials)
-    #
+def add(credentials):
+    service = getGoogleService(credentials)
     calendar = service.calendars().get(calendarId='primary').execute()
-    print(calendar['summary'])
 
     flask.session['credentials'] = credentials_to_dict(credentials)
 
     start_datetime = datetime.datetime(2023, 3, 28, 8)
     stop_datetime = datetime.datetime(2023, 3, 28, 8, 30)
 
-    attendees = []
+    name = flask.request.form["name"]
+    time = flask.request.form["time"] + ':00'
+    club_id = flask.request.form["club"]
+    club = Club(club_id)
+
+    attendees = club.getMembers()
 
     with open("attendees.txt") as fp:
         lines = fp.readlines()
         for line in lines:
             attendees.append({'email': line.strip()})
 
-    name = flask.request.form["name"]
-    time = flask.request.form["time"] + ':00'
+
     print(time, stop_datetime.isoformat())
     event = {
         'summary': name,
@@ -58,42 +62,20 @@ def add(credentials, gData):
         'attendees': attendees,
     }
     event = service.events().insert(calendarId='primary', body=event).execute()
-
-    try:
-        with sqlite3.connect("identifier.sqlite") as con:
-            cur = con.cursor()
-            last_id = cur.execute(f'select max(event_db_id) from events').fetchall()[0][0]
-
-            sql = f"INSERT INTO events (event_db_id, summary, description, startDateTime, startTimeZone, endDateTime, endTimeZone, event)" \
-                  f"VALUES (?,?,?,?,?,?,?,?)"
-            cur.execute(sql, (last_id + 1, name, 'desc', time, 'CET', event['end']['dateTime'], 'CET', event['id']))
-            con.commit()
-    except Exception as e:
-        print(e)
-        con.rollback()
-    finally:
-        return flask.redirect('/event/list')
+    eventModel = Event()
+    eventModel.add(event)
+    return flask.redirect('/event/list')
 
 @eventRoutes.get("/remove")
 @credentials_required
-def remove(credentials, gData):
-    service = googleapiclient.discovery.build(
-        gData['API_SERVICE_NAME'], gData['API_VERSION'], credentials=credentials)
-
+def remove(credentials):
+    service = getGoogleService(credentials)
     eventId = flask.request.args["eventId"]
     service.events().delete(calendarId='primary', eventId=eventId).execute()
+    eventModel = Event()
+    eventModel.remove(eventId)
 
-    try:
-        with sqlite3.connect("identifier.sqlite") as con:
-            cur = con.cursor()
-            sql = f" DELETE FROM events WHERE event=\"" + eventId + '";'
-            cur.execute(sql)
-            con.commit()
-    except Exception as e:
-        print(e)
-        con.rollback()
-    finally:
-        return flask.redirect('/event/list')
+    return flask.redirect('/event/list')
 
 @eventRoutes.get("/edit")
 def edit():
@@ -101,10 +83,8 @@ def edit():
     return render_template("edit.html", eventId=eventId)
 @eventRoutes.post("/edited")
 @credentials_required
-def edited(credentials, gData):
-    service = googleapiclient.discovery.build(
-        gData['API_SERVICE_NAME'], gData['API_VERSION'], credentials=credentials)
-
+def edited(credentials):
+    service = getGoogleService(credentials)
     eventId = flask.request.form["eventId"]
     if not eventId:
         return "No event ID provided"
@@ -138,25 +118,15 @@ def edited(credentials, gData):
 
     updated_event = service.events().update(calendarId='primary', eventId=event['id'], body=event).execute()
 
-    try:
-        with sqlite3.connect("identifier.sqlite") as con:
-            cur = con.cursor()
-            sql = f" UPDATE events SET summary = ?, startDateTime = ?, endDateTime = ? WHERE event= ?"
-            cur.execute(sql, (updated_event['summary'], updated_event['start']['dateTime'], updated_event['end']['dateTime'], event['id']))
-            con.commit()
-    except Exception as e:
-        print(e)
-        con.rollback()
-    finally:
-        return flask.redirect('/event/list')
+    eventModel = Event()
+    eventModel.edit(event['id'], updated_event)
+    return flask.redirect('/event/list')
 
 
 @eventRoutes.get("/list")
 @credentials_required
-def list_events(credentials, gData):
-    service = googleapiclient.discovery.build(
-        gData['API_SERVICE_NAME'], gData['API_VERSION'], credentials=credentials)
-    #
+def list_events(credentials):
+    service = getGoogleService(credentials)
     calendar = service.calendars().get(calendarId='primary').execute()
     print(calendar['summary'])
 

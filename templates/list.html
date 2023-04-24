@@ -32,6 +32,8 @@
 				{{ event.summary }} at {{ event.start.pretty }} ({{
 				event.stats.yes }} / {{ event.stats.all }})
 				<a href="/event/attendance?eventId={{event.id}}">Lista</a>
+				<a href="/event/confirm?eventId={{event.id}}">Potwierdź</a>
+				<a href="/event/reject?eventId={{event.id}}">Odrzuć</a>
 				<a href="/event/edit?eventId={{event.id}}">Zmień</a>
 				<a href="/event/remove?eventId={{event.id}}">Usuń</a>
 			</li>

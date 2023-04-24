@@ -52,3 +52,23 @@ class Event:
         except Exception as e:
             print(e)
             con.rollback()
+
+    def attendance(self, event_id, user_id, is_attending):
+        try:
+            with connect(os.environ.get("DB_PATH")) as con:
+                cur = con.cursor()
+                sql = f" SELECT user_id FROM attendance WHERE event_id = ? AND user_id = ?"
+                attending = len(cur.execute(sql, [event_id, user_id]).fetchall()) != 0
+
+                if is_attending and not attending:
+                    sql = f" INSERT INTO attendance (event_id, user_id) VALUES (?,?)"
+                    cur.execute(sql, (event_id, user_id))
+                elif not is_attending and attending:
+                    sql = f" DELETE FROM attendance WHERE event_id = ? AND user_id = ?"
+                    cur.execute(sql, (event_id, user_id))
+
+                con.commit()
+                return cur.fetchall()
+        except Exception as e:
+            print(e)
+            con.rollback()

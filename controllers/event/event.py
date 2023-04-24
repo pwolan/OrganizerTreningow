@@ -32,6 +32,7 @@ def confirm(credentials):
             break
 
     updated_event = service.events().update(calendarId='primary', eventId=event['id'], body=event).execute()
+    Event().attendance(eventId, user_info['id'], True)
     return flask.redirect('/event/list')
 
 @eventRoutes.get("/reject")
@@ -51,6 +52,7 @@ def reject(credentials):
             break
 
     updated_event = service.events().update(calendarId='primary', eventId=event['id'], body=event).execute()
+    Event().attendance(eventId, user_info['id'], False)
     return flask.redirect('/event/list')
 
 

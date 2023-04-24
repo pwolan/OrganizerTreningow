@@ -17,11 +17,11 @@
 			<input type="number" id="duration" name="duration" required />
 			<br /><br />
 
-            <label for="club">Klub</label><br />
-            <select name="club" id="club" required>
-                <option value="1">Test Club</option>
-                <option value="12">Test Club 2 (nie ma xd)</option>
-            </select>
+			<label for="club">Klub</label><br />
+			<select name="club" id="club" required>
+				<option value="1">Test Club</option>
+				<option value="12">Test Club 2 (nie ma xd)</option>
+			</select>
 			<br /><br />
 
 			<input type="submit" value="Utwórz" />
@@ -31,6 +31,7 @@
 			<li>
 				{{ event.summary }} at {{ event.start.pretty }} ({{
 				event.stats.yes }} / {{ event.stats.all }})
+				<a href="/event/attendance?eventId={{event.id}}">Lista</a>
 				<a href="/event/edit?eventId={{event.id}}">Zmień</a>
 				<a href="/event/remove?eventId={{event.id}}">Usuń</a>
 			</li>

@@ -6,6 +6,7 @@ import googleapiclient.discovery
 import pytz
 from flask import Blueprint, render_template
 from helpers import credentials_to_dict, getGoogleService
+import json
 
 from credentials_required import credentials_required
 from models.Club import Club
@@ -80,6 +81,7 @@ def remove(credentials):
 def edit():
     eventId = flask.request.args.get("eventId")
     return render_template("edit.html", eventId=eventId)
+
 @eventRoutes.post("/edited")
 @credentials_required
 def edited(credentials):
@@ -173,4 +175,38 @@ def list_events(credentials):
 
     # return json.dumps(maybe_events)
     return flask.render_template("list.html", events=maybe_events)
+
+
+@eventRoutes.get("/attendance")
+@credentials_required
+def attendance(credentials):
+    eventId = flask.request.args.get("eventId")
+    service = getGoogleService(credentials)
+    event = service.events().get(calendarId='primary', eventId=eventId).execute()
+
+    yes, no, maybe = [], [], []
+
+
+    for a in event['attendees']:
+        match a['responseStatus']:
+            case 'needsAction':
+                maybe.append(a['email'])
+            case 'declined':
+                no.append(a['email'])
+            case 'tentative':
+                maybe.append(a['email'])
+            case 'accepted':
+                yes.append(a['email'])
+
+    attendance = {
+        'yes': sorted(yes),
+        'no': sorted(no),
+        'maybe': sorted(maybe),
+    }
+
+    event['start']['pretty'] = datetime.datetime.fromisoformat(event['start']['dateTime']).strftime("%Y.%m.%d at %H:%M")
+
+
+    # return json.dumps(attendance)
+    return flask.render_template("attendance.html", attendance=attendance, event=event)
 

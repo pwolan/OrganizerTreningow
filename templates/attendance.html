@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<title>Dołącz do treningów</title>
+	</head>
+	<body>
+		<h2>{{ event.summary }} at {{ event.start.pretty }}</h2>
+		<h4>Obecni</h4>
+		<ul>
+			{% for email in attendance.yes %}
+			<li>{{email}}</li>
+			{% endfor %}
+		</ul>
+
+		<h4>Niepewni</h4>
+		<ul>
+			{% for email in attendance.maybe %}
+			<li>{{email}}</li>
+			{% endfor %}
+		</ul>
+
+		<h4>Nieobecni</h4>
+		<ul>
+			{% for email in attendance.no %}
+			<li>{{email}}</li>
+			{% endfor %}
+		</ul>
+	</body>
+</html>

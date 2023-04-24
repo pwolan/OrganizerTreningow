@@ -26,10 +26,11 @@ def confirm(credentials):
     event = service.events().get(calendarId='primary', eventId=eventId).execute()
     user_info = get_user_info(credentials)
 
-    for attendee in event['attendees']:
-        if attendee['email'] == user_info['email']:
-            attendee['responseStatus'] = 'accepted'
-            break
+    if 'attendees' in event:
+        for attendee in event['attendees']:
+            if attendee['email'] == user_info['email']:
+                attendee['responseStatus'] = 'accepted'
+                break
 
     updated_event = service.events().update(calendarId='primary', eventId=event['id'], body=event).execute()
     Event().attendance(eventId, user_info['id'], True)
@@ -46,10 +47,11 @@ def reject(credentials):
     event = service.events().get(calendarId='primary', eventId=eventId).execute()
     user_info = get_user_info(credentials)
 
-    for attendee in event['attendees']:
-        if attendee['email'] == user_info['email']:
-            attendee['responseStatus'] = 'declined'
-            break
+    if 'attendees' in event:
+        for attendee in event['attendees']:
+            if attendee['email'] == user_info['email']:
+                attendee['responseStatus'] = 'declined'
+                break
 
     updated_event = service.events().update(calendarId='primary', eventId=event['id'], body=event).execute()
     Event().attendance(eventId, user_info['id'], False)
@@ -78,8 +80,6 @@ def add(credentials):
     for email in emails:
         attendees.append({'email': email.strip()})
 
-
-
     event = {
         'summary': name,
         'description': '',
@@ -95,8 +95,7 @@ def add(credentials):
         'attendees': attendees,
     }
     event = service.events().insert(calendarId='primary', body=event).execute()
-    eventModel = Event()
-    eventModel.add(event, at_ids)
+    Event().add(event, at_ids, club_id)
     return flask.redirect('/event/list')
 
 @eventRoutes.get("/remove")
@@ -201,13 +200,13 @@ def list_events(credentials):
                     case 'accepted':
                         yes_count += 1
 
-            e['stats'] = {
-                'all': all_count,
-                'yes': yes_count,
-                'maybe': maybe_count,
-                'no_response': no_response,
-                'no': no_count,
-            }
+        e['stats'] = {
+            'all': all_count,
+            'yes': yes_count,
+            'maybe': maybe_count,
+            'no_response': no_response,
+            'no': no_count,
+        }
 
     # return json.dumps(maybe_events)
     return flask.render_template("list.html", events=maybe_events)
@@ -224,16 +223,17 @@ def attendance(credentials):
 
     yes, no, maybe = [], [], []
 
-    for a in event['attendees']:
-        match a['responseStatus']:
-            case 'needsAction':
-                maybe.append(a['email'])
-            case 'declined':
-                no.append(a['email'])
-            case 'tentative':
-                maybe.append(a['email'])
-            case 'accepted':
-                yes.append(a['email'])
+    if 'attendees' in event:
+        for a in event['attendees']:
+            match a['responseStatus']:
+                case 'needsAction':
+                    maybe.append(a['email'])
+                case 'declined':
+                    no.append(a['email'])
+                case 'tentative':
+                    maybe.append(a['email'])
+                case 'accepted':
+                    yes.append(a['email'])
 
     attendance = {
         'yes': sorted(yes),

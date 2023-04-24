@@ -3,6 +3,8 @@ from flask import Blueprint, render_template, request, session
 
 from credentials_required import credentials_required
 from models.Club import Club
+from helpers import getGoogleService
+
 clubRoutes = Blueprint('club', __name__)
 
 @clubRoutes.get("/join")
@@ -17,6 +19,30 @@ def join(credentials):
     err_msg = club.join(userID)
     if err_msg:
         return err_msg
+
+    service = getGoogleService(credentials)
+    try:
+        club.event_ids()
+        for event_id in club.event_ids():
+            
+            event = service.events().get(calendarId='primary', eventId=event_id).execute()
+
+            if not 'attendees' in event:
+                event['attendees'] = []
+
+            for attendee in event['attendees']:
+                if attendee['email'] == session['user_info']['email']:
+                    attendee['responseStatus'] = 'accepted'
+                    break
+            else:
+                event['attendees'].append({'email': session['user_info']['email']})
+                print(event['attendees'])
+                updated_event = service.events().update(calendarId='primary', eventId=event['id'], body=event).execute()
+                
+
+    except Exception as e:
+        print(e)
+        return "Older events not updated"
 
     return "JOIN SUCCESS"
 

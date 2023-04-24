@@ -43,6 +43,14 @@ class Club:
                 # join if neccessary
                 sql2 = "INSERT INTO usersInClubs (user_id, club_id) VALUES (?,?)"
                 cur.execute(sql2, [user_id, self.id])
+
+                sql3 = "SELECT event_db_id FROM events WHERE club_id=?"
+                events = cur.execute(sql3, self.id).fetchall()
+
+                for e in events:
+                    sql4 = "INSERT INTO attendance (event_id, user_id) VALUES (?,?)"
+                    cur.execute(sql4, [e[0], user_id])
+
         except Exception as e:
             print(e)
             con.rollback()
@@ -92,3 +100,10 @@ class Club:
 
 
 
+    def event_ids(self):
+        with connect(os.environ.get("DB_PATH")) as con:
+            cur = con.cursor()
+            sql = f"SELECT event FROM events WHERE club_id=?"
+            r = cur.execute(sql, self.id).fetchall()
+
+            return map(lambda x: x[0], r)

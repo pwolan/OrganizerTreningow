@@ -5,7 +5,7 @@ import flask
 import googleapiclient.discovery
 import pytz
 from flask import Blueprint, render_template
-from helpers import credentials_to_dict, getGoogleService
+from helpers import credentials_to_dict, getGoogleService, get_user_info
 import json
 
 from credentials_required import credentials_required
@@ -16,12 +16,43 @@ tz = pytz.timezone('CET')
 eventRoutes = Blueprint('event', __name__)
 
 @eventRoutes.get("/confirm")
-def confirm():
-    return "CONFIRM"
+@credentials_required
+def confirm(credentials):
+    service = getGoogleService(credentials)
+    eventId = flask.request.args["eventId"]
+    if not eventId:
+        return "No event ID provided"
+
+    event = service.events().get(calendarId='primary', eventId=eventId).execute()
+    user_info = get_user_info(credentials)
+
+    for attendee in event['attendees']:
+        if attendee['email'] == user_info['email']:
+            attendee['responseStatus'] = 'accepted'
+            break
+
+    updated_event = service.events().update(calendarId='primary', eventId=event['id'], body=event).execute()
+    return flask.redirect('/event/list')
 
 @eventRoutes.get("/reject")
-def reject():
-    return "REJECT"
+@credentials_required
+def reject(credentials):
+    service = getGoogleService(credentials)
+    eventId = flask.request.args["eventId"]
+    if not eventId:
+        return "No event ID provided"
+
+    event = service.events().get(calendarId='primary', eventId=eventId).execute()
+    user_info = get_user_info(credentials)
+
+    for attendee in event['attendees']:
+        if attendee['email'] == user_info['email']:
+            attendee['responseStatus'] = 'declined'
+            break
+
+    updated_event = service.events().update(calendarId='primary', eventId=event['id'], body=event).execute()
+    return flask.redirect('/event/list')
+
 
 @eventRoutes.post("/add")
 @credentials_required
@@ -80,6 +111,9 @@ def remove(credentials):
 @eventRoutes.get("/edit")
 def edit():
     eventId = flask.request.args.get("eventId")
+    if not eventId:
+        return "No event ID provided"
+
     return render_template("edit.html", eventId=eventId)
 
 @eventRoutes.post("/edited")
@@ -176,16 +210,17 @@ def list_events(credentials):
     # return json.dumps(maybe_events)
     return flask.render_template("list.html", events=maybe_events)
 
-
 @eventRoutes.get("/attendance")
 @credentials_required
 def attendance(credentials):
     eventId = flask.request.args.get("eventId")
+    if not eventId:
+        return "No event ID provided"
+
     service = getGoogleService(credentials)
     event = service.events().get(calendarId='primary', eventId=eventId).execute()
 
     yes, no, maybe = [], [], []
-
 
     for a in event['attendees']:
         match a['responseStatus']:

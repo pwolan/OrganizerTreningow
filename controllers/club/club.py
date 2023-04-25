@@ -16,7 +16,7 @@ def join(credentials):
     club: Club = Club(clubID)
     if not club.exists():
         return "JOIN ERROR: Club do not exists"
-    err_msg = club.join(userID)
+    err_msg = club.join(userID, True)
     if err_msg:
         return err_msg
 

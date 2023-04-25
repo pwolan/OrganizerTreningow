@@ -27,7 +27,7 @@ class Club:
     def exists(self):
         return self.__exists
 
-    def join(self, user_id):
+    def join(self, user_id, admin=False):
         if user_id is None:
             return 'No such User'
         try:
@@ -40,9 +40,9 @@ class Club:
                 if len(rows) > 0:
                     return "User already joined"
 
-                # join if neccessary
-                sql2 = "INSERT INTO usersInClubs (user_id, club_id) VALUES (?,?)"
-                cur.execute(sql2, [user_id, self.id])
+                # join if necessary
+                sql2 = "INSERT INTO usersInClubs (user_id, club_id, admin) VALUES (?,?,?)"
+                cur.execute(sql2, [user_id, self.id, 1 if admin else 0])
 
                 sql3 = "SELECT event_db_id FROM events WHERE club_id=?"
                 events = cur.execute(sql3, self.id).fetchall()

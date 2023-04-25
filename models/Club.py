@@ -107,3 +107,19 @@ class Club:
             r = cur.execute(sql, self.id).fetchall()
 
             return map(lambda x: x[0], r)
+
+
+    def userClubs(user_id):
+        try:
+            with connect(os.environ.get("DB_PATH")) as con:
+                cur = con.cursor()
+
+                sql = f"SELECT name FROM clubs INNER JOIN usersInClubs u on u.club_id = clubs.club_id WHERE user_id=?"
+                r = cur.execute(sql, [user_id]).fetchall()
+
+                return map(lambda x: str(x[0]), r)
+
+        except Exception as e:
+            print(e)
+            con.rollback()
+            return []

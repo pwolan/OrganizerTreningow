@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<title>Utwórz swój klub</title>
+	</head>
+	<body>
+		<form action="/event/edited" method="post">
+			<label for="title">Nazwa klubu</label><br />
+			<input type="text" name="title" id="title" /> <br /><br />
+
+			<input
+				type="hidden"
+				id="eventId"
+				name="eventId"
+				value="{{eventId}}"
+			/>
+
+			<input type="submit" value="Zmień" />
+		</form>
+
+		<h4>Twoje kluby</h4>
+		<ul>
+			{% for club in clubs.your %}
+			<li>
+				<p>{{club}}</p>
+			</li>
+			{% endfor %}
+		</ul>
+
+		{% if clubs.managed != []: %}
+		<h4>Zarządzane kluby kluby</h4>
+		<ul>
+			{% for club in clubs.managed %}
+			<li>
+				<p>{{club}}</p>
+			</li>
+			{% endfor %}
+		</ul>
+		{% endif %}
+
+		<h4>Inne kluby</h4>
+		<ul>
+			{% for club in clubs.other %}
+			<li>
+				<p>{{club}}</p>
+			</li>
+			{% endfor %}
+		</ul>
+	</body>
+</html>

@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, request, session
 import flask
 import json
 
@@ -8,6 +8,8 @@ import googleapiclient.discovery
 import pytz
 import datetime
 import sqlite3
+from models.Club import Club
+
 
 from credentials_required import credentials_required
 
@@ -24,7 +26,32 @@ def events():
 
 
 @userRoutes.get('/clubs')
-def clubs():
-    return "CLUBS"
+@credentials_required
+def show(_):
+    club_id = request.args.get("clubID")
+    club = Club(club_id)
+
+    data = club.getIncomingTrainingsStats(3)
+
+    your = []
+    managed = []
+    other = []
+
+    user_id = session['user_info']['id']
+    clubs = Club.userClubs(user_id)
+
+    print(clubs)
+
+    your = clubs
+    managed = clubs
+    other = clubs
+
+    clubs = {
+        "your" : your,
+        "managed" : managed,
+        "other" : other
+    }
+
+    return flask.render_template("clubs.html", clubs=clubs)
 
 

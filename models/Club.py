@@ -114,12 +114,20 @@ class Club:
             with connect(os.environ.get("DB_PATH")) as con:
                 cur = con.cursor()
 
-                sql = f"SELECT name FROM clubs INNER JOIN usersInClubs u on u.club_id = clubs.club_id WHERE user_id=?"
-                r = cur.execute(sql, [user_id]).fetchall()
+                queryUsers = f"SELECT DISTINCT name, u.club_id FROM clubs INNER JOIN usersInClubs u on u.club_id = clubs.club_id WHERE user_id=? and not admin"
+                queryManaged = f"SELECT DISTINCT name, u.club_id FROM clubs INNER JOIN usersInClubs u on u.club_id = clubs.club_id WHERE user_id=? and admin"
+                queryOther = f"SELECT DISTINCT name, u.club_id FROM clubs INNER JOIN usersInClubs u on u.club_id = clubs.club_id WHERE not user_id=?"
 
-                return map(lambda x: str(x[0]), r)
+                names = lambda query: list(map(lambda x: (str(x[0]), x[1]), cur.execute(query, [user_id]).fetchall()))
+
+                return (
+                    names(queryUsers),
+                    names(queryManaged),
+                    names(queryOther)
+                )
 
         except Exception as e:
             print(e)
             con.rollback()
             return []
+

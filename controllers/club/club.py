@@ -81,32 +81,3 @@ def stats(_):
 
     data = club.getIncomingTrainingsStats(3)
     return flask.render_template("stats.html", data=data)
-
-@clubRoutes.get("/show")
-@credentials_required
-def show(_):
-    club_id = request.args.get("clubID")
-    club = Club(club_id)
-
-    data = club.getIncomingTrainingsStats(3)
-
-    your = []
-    managed = []
-    other = []
-
-    user_id = session['user_info']['id']
-    clubs = Club.userClubs(user_id)
-
-    your = clubs
-    managed = clubs
-    other = clubs
-
-    clubs = {
-        "your" : your,
-        "managed" : managed,
-        "other" : other
-    }
-
-    return flask.render_template("clubs.html", clubs=clubs)
-
-

@@ -6,8 +6,8 @@
 	</head>
 	<body>
 		<form action="/event/edited" method="post">
-			<label for="title">Nazwa klubu</label><br />
-			<input type="text" name="title" id="title" /> <br /><br />
+			<label for="title">Utwórz własny klub</label><br />
+			<input type="text" name="title" id="title" />
 
 			<input
 				type="hidden"
@@ -16,36 +16,50 @@
 				value="{{eventId}}"
 			/>
 
-			<input type="submit" value="Zmień" />
+			<input type="submit" value="Stwórz klub" />
 		</form>
 
 		<h4>Twoje kluby</h4>
+		{% if clubs.your != []: %}
+
 		<ul>
 			{% for club in clubs.your %}
 			<li>
-				<p>{{club}}</p>
+				<p>{{club[0]}}</p>
 			</li>
 			{% endfor %}
 		</ul>
 
-		{% if clubs.managed != []: %}
-		<h4>Zarządzane kluby kluby</h4>
+		{% else: %}
+
+		<p>Nie jesteś jeszcze w żadnym klubie</p>
+
+		{% endif %} {% if clubs.managed != []: %}
+		<h4>Zarządzane kluby</h4>
 		<ul>
 			{% for club in clubs.managed %}
 			<li>
-				<p>{{club}}</p>
+				<p>{{club[0]}}</p>
 			</li>
 			{% endfor %}
 		</ul>
 		{% endif %}
 
 		<h4>Inne kluby</h4>
+		{% if clubs.other != []: %}
+
 		<ul>
 			{% for club in clubs.other %}
 			<li>
-				<p>{{club}}</p>
+				<p>{{club[0]}}</p>
 			</li>
 			{% endfor %}
 		</ul>
+
+		{% else: %}
+
+		<p>Jesteś we wrzystkich klubach</p>
+
+		{% endif %}
 	</body>
 </html>

@@ -38,20 +38,12 @@ def show(_):
     other = []
 
     user_id = session['user_info']['id']
-    clubs = Club.userClubs(user_id)
-
-    print(clubs)
-
-    your = clubs
-    managed = clubs
-    other = clubs
+    your, managed, other = Club.userClubs(user_id)
 
     clubs = {
         "your" : your,
         "managed" : managed,
-        "other" : other
+        "other" : other 
     }
 
     return flask.render_template("clubs.html", clubs=clubs)
-
-

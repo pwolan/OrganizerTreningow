@@ -114,9 +114,9 @@ class Club:
             with connect(os.environ.get("DB_PATH")) as con:
                 cur = con.cursor()
 
-                queryUsers = f"SELECT DISTINCT name, u.club_id FROM clubs INNER JOIN usersInClubs u on u.club_id = clubs.club_id WHERE user_id=? and not admin"
-                queryManaged = f"SELECT DISTINCT name, u.club_id FROM clubs INNER JOIN usersInClubs u on u.club_id = clubs.club_id WHERE user_id=? and admin"
-                queryOther = f"SELECT DISTINCT name, u.club_id FROM clubs INNER JOIN usersInClubs u on u.club_id = clubs.club_id WHERE not user_id=?"
+                queryUsers = f"SELECT DISTINCT name, u.club_id FROM clubs INNER JOIN usersInClubs u on u.club_id = clubs.club_id WHERE user_id=? and not admin and endTime is null"
+                queryManaged = f"SELECT DISTINCT name, u.club_id FROM clubs INNER JOIN usersInClubs u on u.club_id = clubs.club_id WHERE user_id=? and admin and endTime is null"
+                queryOther = f"SELECT DISTINCT name, club_id FROM clubs WHERE not EXISTS (SELECT * FROM usersInClubs u WHERE u.user_id=? and club_id=u.club_id and endTime is null)"
 
                 names = lambda query: list(map(lambda x: (str(x[0]), x[1]), cur.execute(query, [user_id]).fetchall()))
 

@@ -25,7 +25,10 @@
 		<ul>
 			{% for club in clubs.your %}
 			<li>
-				<p>{{club[0]}}</p>
+				<p>
+					{{club[0]}}
+					<a href="/club/leave?clubID={{club[1]}}">Opuść</a>
+				</p>
 			</li>
 			{% endfor %}
 		</ul>
@@ -39,7 +42,10 @@
 		<ul>
 			{% for club in clubs.managed %}
 			<li>
-				<p>{{club[0]}}</p>
+				<p>
+					{{club[0]}}
+					<a href="/club/leave?clubID={{club[1]}}">Opuść</a>
+				</p>
 			</li>
 			{% endfor %}
 		</ul>
@@ -51,7 +57,10 @@
 		<ul>
 			{% for club in clubs.other %}
 			<li>
-				<p>{{club[0]}}</p>
+				<p>
+					{{club[0]}}
+					<a href="/club/join?clubID={{club[1]}}">Dołącz</a>
+				</p>
 			</li>
 			{% endfor %}
 		</ul>

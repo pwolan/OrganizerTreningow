@@ -1,5 +1,6 @@
 import flask
 from flask import Blueprint, render_template, request, session
+from slugify import slugify
 
 from credentials_required import credentials_required
 from models.Club import Club
@@ -61,13 +62,40 @@ def leave(credentials):
 
 
 
-@clubRoutes.get("/add")
-def add():
-    return "ADD"
+@clubRoutes.post("/create")
+def create():
+    name = flask.request.form["name"]
+    user_id = session['user_info']['id']
+
+    club_id = Club.create(name, slugify(name))
+
+    if club_id == None:
+        return "CLUB ALREADY EXISTS"
+
+    club = Club(club_id)
+    print('created', club_id)
+
+    club.join(user_id, True)
+
+    return "CREATED AND JOINED"
 
 @clubRoutes.get("/remove")
-def remove():
-    return "REMOVE"
+@credentials_required
+def remove(credentials):
+    club_id = request.args.get("clubID")
+    user_id = session['user_info']['id']
+    club: Club = Club(club_id)
+    if not club.exists():
+        return "LEAVE ERROR: Club do not exists"
+
+    members, admin = club.getMembers()
+    for m in members:
+        club.leave(m)
+
+    err_msg = club.remove()
+    if err_msg:
+        return err_msg
+    return "REMOVE SUCCESS"
 
 @clubRoutes.get("/edit")
 def edit():

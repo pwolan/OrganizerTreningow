@@ -5,17 +5,9 @@
 		<title>Utwórz swój klub</title>
 	</head>
 	<body>
-		<form action="/event/edited" method="post">
-			<label for="title">Utwórz własny klub</label><br />
-			<input type="text" name="title" id="title" />
-
-			<input
-				type="hidden"
-				id="eventId"
-				name="eventId"
-				value="{{eventId}}"
-			/>
-
+		<form action="/club/create" method="post">
+			<label for="name">Utwórz własny klub</label><br />
+			<input type="text" name="name" id="name" />
 			<input type="submit" value="Stwórz klub" />
 		</form>
 
@@ -45,6 +37,7 @@
 				<p>
 					{{club[0]}}
 					<a href="/club/leave?clubID={{club[1]}}">Opuść</a>
+					<a href="/club/remove?clubID={{club[1]}}">Usuń</a>
 				</p>
 			</li>
 			{% endfor %}

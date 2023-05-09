@@ -167,6 +167,8 @@ def list_events(credentials):
     print(calendar['summary'])
 
     flask.session['credentials'] = credentials_to_dict(credentials)
+    user_id = flask.session['user_info']['id']
+
 
     timeMin = tz.localize(datetime.datetime.now()).isoformat()
     maybe_events = service.events().list(calendarId='primary', timeMin=timeMin,
@@ -208,8 +210,24 @@ def list_events(credentials):
             'no': no_count,
         }
 
+    clubs = [
+        {
+            'id': 0,
+            'name': 'Test Club',
+        },
+        {
+            'id': 1,
+            'name': 'Python Club',
+        }
+    ]
+
+
+
+    managed = Club.userClubs(user_id)[1]
+    print(managed)
+
     # return json.dumps(maybe_events)
-    return flask.render_template("list.html", events=maybe_events)
+    return flask.render_template("list.html", events=maybe_events, clubs=managed)
 
 @eventRoutes.get("/attendance")
 @credentials_required

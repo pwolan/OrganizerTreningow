@@ -82,7 +82,7 @@ class Club:
                 cur.execute(sql, [self.id])
                 members = cur.fetchall()
 
-                return map(lambda x: x[5], members), map(lambda x: x[1], members)
+                return map(lambda x: x[6], members), map(lambda x: x[1], members)
         except Exception as e:
             print(e)
             con.rollback()

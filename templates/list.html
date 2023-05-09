@@ -19,8 +19,9 @@
 
 			<label for="club">Klub</label><br />
 			<select name="club" id="club" required>
-				<option value="1">Test Club</option>
-				<option value="12">Test Club 2 (nie ma xd)</option>
+				{% for club in clubs %}
+				<option value="{{ club[1] }}">{{ club[0] }}</option>
+				{% endfor %}
 			</select>
 			<br /><br />
 

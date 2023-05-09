@@ -35,8 +35,9 @@
 			{% for club in clubs.managed %}
 			<li>
 				<p>
-					{{club[0]}}
+					{{club[0]}} {% if club[2] %}
 					<a href="/club/leave?clubID={{club[1]}}">Opuść</a>
+					{% endif %}
 					<a href="/club/remove?clubID={{club[1]}}">Usuń</a>
 				</p>
 			</li>

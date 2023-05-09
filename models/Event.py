@@ -72,3 +72,12 @@ class Event:
         except Exception as e:
             print(e)
             con.rollback()
+
+    def is_admin(event_id, user_id):
+        with connect(os.environ.get("DB_PATH")) as con:
+            cur = con.cursor()
+            # check if already exists
+            sql = "select * from usersInClubs WHERE user_id=? and club_id=(select club_id from events where event=?) and admin>0 and endTime is null"
+            cur.execute(sql, [user_id, event_id])
+            rows = cur.fetchall()
+            return len(rows) > 0

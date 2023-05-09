@@ -173,3 +173,28 @@ class Club:
             print(e)
             con.rollback()
             return False
+
+    def count_admins(self):
+        try:
+            with connect(os.environ.get("DB_PATH")) as con:
+                cur = con.cursor()
+                sql = "SELECT COUNT(*) FROM usersInClubs WHERE club_id=? and admin>0 and endTime is null"
+                cur.execute(sql, [self.id])
+                return cur.fetchall()[0][0]
+        except Exception as e:
+            print(e)
+            con.rollback()
+            return False
+
+    def from_event(event_id):
+        try:
+            with connect(os.environ.get("DB_PATH")) as con:
+                cur = con.cursor()
+                sql = "SELECT club_id FROM events WHERE event=?"
+                cur.execute(sql, [event_id])
+                return Club(cur.fetchall()[0][0])
+
+        except Exception as e:
+            print(e)
+            con.rollback()
+            return False

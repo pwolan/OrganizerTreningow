@@ -52,7 +52,11 @@ def join(credentials):
 def leave(credentials):
     club_id = request.args.get("clubID")
     user_id = session['user_info']['id']
+
     club: Club = Club(club_id)
+    if club.count_admins():
+        return "LEAVE ERROR: Would have no admins"
+
     if not club.exists():
         return "LEAVE ERROR: Club do not exists"
     err_msg = club.leave(user_id)

@@ -31,8 +31,10 @@
 			{% for event in events %}
 			<li>
 				{{ event.summary }} at {{ event.start.pretty }} ({{
-				event.stats.yes }} / {{ event.stats.all }})
+				event.stats.yes }} / {{ event.stats.all }}) {% if event.admin:
+				%}
 				<a href="/event/attendance?eventId={{event.id}}">Lista</a>
+				{% endif %}
 				<a href="/event/confirm?eventId={{event.id}}">Potwierdź</a>
 				<a href="/event/reject?eventId={{event.id}}">Odrzuć</a>
 				<a href="/event/edit?eventId={{event.id}}">Zmień</a>

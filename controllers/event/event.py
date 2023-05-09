@@ -210,18 +210,7 @@ def list_events(credentials):
             'no': no_count,
         }
 
-    clubs = [
-        {
-            'id': 0,
-            'name': 'Test Club',
-        },
-        {
-            'id': 1,
-            'name': 'Python Club',
-        }
-    ]
-
-
+        e['admin'] = Event.is_admin(e['id'], user_id)
 
     managed = Club.userClubs(user_id)[1]
     print(managed)

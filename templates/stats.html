@@ -3,26 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <title>Stats</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
-    <table>
-        <thead>
-            <tr>
-                <th>Member</th>
-                <th>Date 1</th>
-                <th>Date 2</th>
-                <th>Date 3</th>
+    <div class="container mx-auto">
+        <h1 class="text-center text-xl">Kto przyjdzie na nadchodzący trening?</h1>
+        <h2 class="text-center text-lg"><span class="font-bold">{{ event.name }}</span> zaczynające się <span class="font-bold">{{ event.time }}</span></h2>
+        <h3 class="text-center">Procent frekwencji: {{ percent }}&percnt;</h3>
+        <table class="table-auto w-full">
+            <tr class="bg-gray-100">
+                <th class="text-left p-4 font-medium">
+                    Mail
+                </th>
+                <th class="text-left p-4 font-medium">
+                    Czy przyjdzie
+                </th>
             </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>wolan</td>
-                <td>12</td>
-                <td>13</td>
-                <td>14</td>
-            </tr>
+            {% for person in freq %}
+                <tr class="border-b hover:bg-gray-50">
+                    <td class="p-4">{{ person.mail}}</td>
+                    <td class="p-4"> {{ 'TAK' if  person.status else 'NIE'  }}</td>
+                </tr>
+            {% endfor %}
 
-        </tbody>
-    </table>
+        </table>
+    </div>
 </body>
 </html>

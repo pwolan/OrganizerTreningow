@@ -1,11 +1,15 @@
+from itertools import count
+
 import flask
 from flask import Blueprint, render_template, request, session
 from slugify import slugify
-
+import datetime
 from credentials_required import credentials_required
 from models.Club import Club
 from helpers import getGoogleService
+import pytz
 
+tz = pytz.timezone('CET')
 clubRoutes = Blueprint('club', __name__)
 
 @clubRoutes.get("/join")
@@ -81,7 +85,7 @@ def create():
 
     club.join(user_id, True)
 
-    return "CREATED AND JOINED"
+    return 'CREATED AND JOINED <br/> <a href="/club">go back</a>'
 
 @clubRoutes.get("/remove")
 @credentials_required
@@ -111,5 +115,23 @@ def stats(_):
     club_id = request.args.get("clubID")
     club = Club(club_id)
 
-    data = club.getIncomingTrainingsStats(3)
-    return flask.render_template("stats.html", data=data)
+    data, event = club.getNextTrainingsStats()
+    print(data)
+    freq = list(map(lambda x:{'mail': x[1], 'status': x[2] is not None}, data))
+
+    cnt = 0
+    p = 0.0
+    for f in freq:
+        if f['status']:
+          cnt+=1
+    if cnt != 0:
+        freq_len = len(data)
+        p = cnt/freq_len * 100
+    p = round(p, 2)
+
+    time = datetime.datetime.fromisoformat(event[1]).strftime("%Y.%m.%d  %H:%M")
+    ev = {'time': time, 'name': event[2]}
+
+
+
+    return flask.render_template("stats.html", freq=freq, event=ev, percent=p)

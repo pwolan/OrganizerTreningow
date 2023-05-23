@@ -3,44 +3,165 @@
 	<head>
 		<meta charset="UTF-8" />
 		<title>Dołącz do treningów</title>
+        <script src="https://cdn.tailwindcss.com"></script>
 	</head>
 	<body>
-		<form action="/event/add" method="post">
-			<label for="name">Nazwa wydarzenia</label><br />
-			<input type="text" name="name" required /> <br /><br />
+     <div class="container mx-auto py-8">
+    <h1 class="text-2xl font-bold mb-6 text-center">Dodaj wydarzenie</h1>
+    <form class="w-full max-w-sm mx-auto bg-white p-8 rounded-md shadow-md" action="/event/add" method="post">
+      <div class="mb-4">
+        <label class="block text-gray-700 text-sm font-bold mb-2" for="name">Nazwa wydarzenia</label>
+        <input class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-indigo-500"
+          type="text" id="name" name="name" required >
+      </div>
+      <div class="mb-4">
+        <label class="block text-gray-700 text-sm font-bold mb-2" for="time">Rozpoczęcie treningu</label>
+        <input class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-indigo-500"
+         type="datetime-local" id="time" name="time" required >
+      </div>
+      <div class="mb-4">
+        <label class="block text-gray-700 text-sm font-bold mb-2" for="duration">Czas trwania (w minutach)</label>
+        <input class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-indigo-500"
+          type="number" id="duration" name="duration" required>
+      </div>
+     <div class="mb-4">
+        <label class="block text-gray-700 text-sm font-bold mb-2" for="club">Klub</label>
+        <select class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-indigo-500 bg-white"
+                name="club" id="club" required >
+            {% for club in clubs %}
+            <option value="{{ club[1] }}">{{ club[0] }}</option>
+            {% endfor %}
+        </select>
+     </div>
+    <div class="mb-4">
+            <label class="text-gray-700 text-sm font-bold mb-2" for="weekly">Cotygodniowy?</label>
+			<input type="checkbox" name="weekly" id="weekly" value="true"/>
+    </div>
+    <div class="mb-4">
+            <label class="block text-gray-700 text-sm font-bold mb-2" for="until">Do kiedy tworzyć wydarzenia</label>
+			<input class="w-full bg-white px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-indigo-500"
+                    type="datetime-local" id="until" name="until" disabled/>
+    </div>
+      <button
+        class="w-full bg-indigo-500 text-white text-sm font-bold py-2 px-4 rounded-md hover:bg-indigo-600 transition duration-300"
+        type="submit">Utwórz</button>
+    </form>
+  </div>
+{#		<form action="/event/add" method="post">#}
+{#			<label for="name">Nazwa wydarzenia</label><br />#}
+{#			<input type="text" name="name" required /> <br /><br />#}
+{##}
+{#			<label for="time">Rozpoczęcie treningu</label><br />#}
+{#			<input type="datetime-local" id="time" name="time" required />#}
+{#			<br /><br />#}
+{##}
+{#			<label for="duration">Czas trwania (w minutach)</label><br />#}
+{#			<input type="number" id="duration" name="duration" required />#}
+{#			<br /><br />#}
+{##}
+{#			<label for="club">Klub</label><br />#}
+{#			<select name="club" id="club" required>#}
+{#				{% for club in clubs %}#}
+{#				<option value="{{ club[1] }}">{{ club[0] }}</option>#}
+{#				{% endfor %}#}
+{#			</select>#}
+{##}
+{#			<br /><br />#}
+{#            <label for="weekly">Cotygodniowy?</label>#}
+{#			<input type="checkbox" name="weekly" id="weekly" value="true"/> <br /><br />#}
+{##}
+{#            <label for="until">Do kiedy tworzyć wydarzenia</label><br />#}
+{#			<input type="datetime-local" id="until" name="until" disabled/>#}
+{#			<br /><br />#}
+{##}
+{#			<input type="submit" value="Utwórz" />#}
+{#		</form>#}
 
-			<label for="time">Rozpoczęcie treningu</label><br />
-			<input type="datetime-local" id="time" name="time" required />
-			<br /><br />
+     <div class="bg-white">
 
-			<label for="duration">Czas trwania (w minutach)</label><br />
-			<input type="number" id="duration" name="duration" required />
-			<br /><br />
+<div class="overflow-x-auto border-x border-t container mx-auto">
+   <table class="table-auto w-full">
+      <thead class="border-b">
+         <tr class="bg-gray-100">
+            <th class="text-left p-4 font-medium">
+               Nazwa
+            </th>
+            <th class="text-left p-4 font-medium">
+               Termin
+            </th>
 
-			<label for="club">Klub</label><br />
-			<select name="club" id="club" required>
-				{% for club in clubs %}
-				<option value="{{ club[1] }}">{{ club[0] }}</option>
-				{% endfor %}
-			</select>
-			<br /><br />
+            <th class="text-left p-4 font-medium">
+               Uczestnicy
+            </th>
 
-			<input type="submit" value="Utwórz" />
-		</form>
-		<ul>
-			{% for event in events %}
-			<li>
-				{{ event.summary }} at {{ event.start.pretty }} ({{
-				event.stats.yes }} / {{ event.stats.all }}) {% if event.admin:
+
+            <th class="text-left p-4 font-medium">
+               Akcje
+            </th>
+         </tr>
+      </thead>
+      <tbody>
+
+      {% for event in events %}
+			<tr class="border-b hover:bg-gray-50">
+                <td class="p-4">
+                   {{ event.summary }}
+                </td>
+                <td class="p-4">
+                   {{ event.start.pretty }}
+                </td>
+                <td class="p-4">
+                    ({{
+				event.stats.yes }} / {{ event.stats.all }})
+                </td>
+                <td class="p-4">
+                       {% if event.admin:
 				%}
-				<a href="/event/attendance?eventId={{event.id}}">Lista</a>
-				{% endif %}
-				<a href="/event/confirm?eventId={{event.id}}">Potwierdź</a>
-				<a href="/event/reject?eventId={{event.id}}">Odrzuć</a>
-				<a href="/event/edit?eventId={{event.id}}">Zmień</a>
-				<a href="/event/remove?eventId={{event.id}}">Usuń</a>
-			</li>
+                    <a href="/event/attendance?eventId={{event.id}}">Lista</a>
+                    {% endif %}
+
+                    <a href="/event/confirm?eventId={{event.id}}">Potwierdź</a>
+                    <a href="/event/reject?eventId={{event.id}}">Odrzuć</a>
+                    <a href="/event/edit?eventId={{event.id}}">Zmień</a>
+                    <a href="/event/remove?eventId={{event.id}}">Usuń</a>
+                </td>
+
+			</tr>
 			{% endfor %}
-		</ul>
+
+      </tbody>
+   </table>
+</div>
+</div>
+
+{#		<ul class="mx-auto container">#}
+{#			{% for event in events %}#}
+{#			<li class="">#}
+{#				{{ event.summary }} at {{ event.start.pretty }} ({{#}
+{#				event.stats.yes }} / {{ event.stats.all }}) {% if event.admin:#}
+{#				%}#}
+{#				<a href="/event/attendance?eventId={{event.id}}">Lista</a>#}
+{#				{% endif %}#}
+{#				<a href="/event/confirm?eventId={{event.id}}">Potwierdź</a>#}
+{#				<a href="/event/reject?eventId={{event.id}}">Odrzuć</a>#}
+{#				<a href="/event/edit?eventId={{event.id}}">Zmień</a>#}
+{#				<a href="/event/remove?eventId={{event.id}}">Usuń</a>#}
+{#			</li>#}
+{#			{% endfor %}#}
+{#		</ul>#}
+
+    <script>
+        document.getElementById("weekly").onchange = (e)=>{
+            const until =  document.getElementById("until")
+            if(e.target.checked){
+                until.disabled = false;
+                until.required = true;
+            } else {
+                until.disabled = true;
+                until.required = false;
+            }
+        }
+
+    </script>
 	</body>
 </html>

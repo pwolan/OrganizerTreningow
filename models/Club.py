@@ -89,21 +89,73 @@ class Club:
             return "Database Error"
 
     def getIncomingTrainingsStats(self, n):
-        # try:
-        #     with connect(os.environ.get("DB_PATH")) as con:
-        #         cur = con.cursor()
-        #         sql = "SELECT * FROM usersInClubs INNER JOIN users u on u.user_id = usersInClubs.user_id WHERE club_id=? and endTime is null"
-        #         cur.execute(sql, self.id)
-        #         members = cur.fetchall()
-        #         print(members)
-        #         return map(lambda x: x[5], members)
-        # except Exception as e:
-        #     print(e)
-        #     con.rollback()
-        #     return "Database Error"
+        try:
+            with connect(os.environ.get("DB_PATH")) as con:
+                cur = con.cursor()
+                sql = "SELECT * FROM usersInClubs INNER JOIN users u on u.user_id = usersInClubs.user_id WHERE club_id=? and endTime is null"
+                cur.execute(sql, self.id)
+                members = cur.fetchall()
+                print(members)
+                return map(lambda x: x[5], members)
+
+
+        except Exception as e:
+            print(e)
+            con.rollback()
+            return "Database Error"
         pass
 
+    def getNextTrainingsStats(self):
+        try:
+            with connect(os.environ.get("DB_PATH")) as con:
+                cur = con.cursor()
+                sql1 = "SELECT event, startDateTime, summary FROM events WHERE club_id = ? AND DATE(startDateTime) > datetime() ORDER BY startDateTime"
+                cur.execute(sql1, str(self.id))
+                fetch = cur.fetchone()
+                event_id = fetch[0]
+                print(event_id)
+                sql2 = """SELECT DISTINCT uIC.user_id, users.mail, a.event_id FROM users
+                    INNER JOIN usersInClubs uIC on users.user_id = uIC.user_id
+                    LEFT JOIN (
+                        SELECT * from attendance where event_id = ?
+                ) a on users.user_id = a.user_id
+                    WHERE uIC.club_id=?
+    """
+                cur.execute(sql2, [event_id, self.id])
 
+                members = cur.fetchall()
+                return members, fetch
+        except Exception as e:
+            print(e)
+            con.rollback()
+            return "Database Error"
+        pass
+
+    def getLastMonthTrainingsStats(self):
+        try:
+            with connect(os.environ.get("DB_PATH")) as con:
+                cur = con.cursor()
+                sql1 = "SELECT event, startDateTime, summary FROM events WHERE club_id = ? AND DATE(startDateTime) > datetime() ORDER BY startDateTime"
+                cur.execute(sql1, str(self.id))
+                fetch = cur.fetchone()
+                event_id = fetch[0]
+                print(event_id)
+                sql2 = """SELECT DISTINCT uIC.user_id, users.mail, a.event_id FROM users
+                    INNER JOIN usersInClubs uIC on users.user_id = uIC.user_id
+                    LEFT JOIN (
+                        SELECT * from attendance where event_id = ?
+                ) a on users.user_id = a.user_id
+                    WHERE uIC.club_id=?
+    """
+                cur.execute(sql2, [event_id, self.id])
+
+                members = cur.fetchall()
+                return members, fetch
+        except Exception as e:
+            print(e)
+            con.rollback()
+            return "Database Error"
+        pass
 
     def event_ids(self):
         with connect(os.environ.get("DB_PATH")) as con:

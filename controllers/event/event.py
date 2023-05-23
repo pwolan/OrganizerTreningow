@@ -71,6 +71,13 @@ def add(credentials):
 
     name = flask.request.form["name"]
     time = flask.request.form["time"] + ':00'
+    is_weekly_recurring = flask.request.form["weekly"] == "true"
+    until = flask.request.form["until"]
+    if until:
+        until += ':00'
+        until = until.replace("-", "")
+        until = until.replace(":", "")
+    print(is_weekly_recurring, until)
     club_id = flask.request.form["club"]
     club = Club(club_id)
 
@@ -94,8 +101,13 @@ def add(credentials):
         },
         'attendees': attendees,
     }
+    if is_weekly_recurring:
+        event["recurrence"] = [f"RRULE:FREQ=WEEKLY;UNTIL={until}Z"]
     event = service.events().insert(calendarId='primary', body=event).execute()
     Event().add(event, at_ids, club_id)
+    if is_weekly_recurring:
+        instances = service.events().instances(calendarId='primary', eventId=event['id']).execute()
+        print(instances)
     return flask.redirect('/event/list')
 
 @eventRoutes.get("/remove")
@@ -211,6 +223,8 @@ def list_events(credentials):
         }
 
         e['admin'] = Event.is_admin(e['id'], user_id)
+
+    maybe_events = filter(lambda ev: 'dateTime' in ev['start'], maybe_events)
 
     managed = Club.userClubs(user_id)[1]
     print(managed)

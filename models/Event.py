@@ -54,6 +54,7 @@ class Event:
             con.rollback()
 
     def attendance(self, event_id, user_id, is_attending):
+        print(event_id, user_id)
         try:
             with connect(os.environ.get("DB_PATH")) as con:
                 cur = con.cursor()

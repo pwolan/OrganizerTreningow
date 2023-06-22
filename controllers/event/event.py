@@ -1,6 +1,6 @@
 import datetime
 import sqlite3
-
+import pprint
 import flask
 import googleapiclient.discovery
 import pytz
@@ -71,13 +71,16 @@ def add(credentials):
 
     name = flask.request.form["name"]
     time = flask.request.form["time"] + ':00'
-    is_weekly_recurring = flask.request.form["weekly"] == "true"
-    until = flask.request.form["until"]
+    is_weekly_recurring = False
+    until = None
+    if "weekly" in flask.request.form:
+        is_weekly_recurring = flask.request.form.get("weekly") == "true"
+        until = flask.request.form["until"]
     if until:
         until += ':00'
         until = until.replace("-", "")
         until = until.replace(":", "")
-    print(is_weekly_recurring, until)
+
     club_id = flask.request.form["club"]
     club = Club(club_id)
 
@@ -100,6 +103,7 @@ def add(credentials):
             'timeZone': 'CET',
         },
         'attendees': attendees,
+        'etag': "app"
     }
     if is_weekly_recurring:
         event["recurrence"] = [f"RRULE:FREQ=WEEKLY;UNTIL={until}Z"]
@@ -186,6 +190,8 @@ def list_events(credentials):
     maybe_events = service.events().list(calendarId='primary', timeMin=timeMin,
                                          maxResults=10, singleEvents=True,
                                          orderBy='startTime').execute()['items']
+
+    pprint.pprint(maybe_events)
 
     for e in maybe_events:
         e['stats'] = {}
